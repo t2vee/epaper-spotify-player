@@ -34,9 +34,10 @@ def display_on_epaper(track_info):
     epd.Clear(0xFF)
 
     # Fonts
-    title_font = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 20)
-    details_font = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 18)
-    icon_size = (24, 24)
+    twenty_font = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 22)
+    eighteen_font = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 14)
+    fifteen_font = ImageFont.truetype(os.path.join(picdir, 'Font.ttc'), 15)
+    icon_size = (32, 32)
 
     # Create a blank image and get a drawing context
     image = Image.new('1', (epd.height, epd.width), 0)  # Black background
@@ -44,9 +45,9 @@ def display_on_epaper(track_info):
 
     # Song and Album Name
     text = f"{track_info['name']}"
-    text_width, text_height = draw.textsize(text, font=title_font)
+    text_width, text_height = draw.textsize(text, font=twenty_font)
     x_text = epd.width - text_width // 2
-    draw.text((x_text, 10), text, font=title_font, fill=255)
+    draw.text((x_text, 10), text, font=twenty_font, fill=255)
 
     # Song progress and duration
     song_progress_time = str(int(track_info['progress_ms'] / 60000)) + ":" + str(
@@ -54,19 +55,14 @@ def display_on_epaper(track_info):
     song_length = str(int(track_info['duration_ms'] / 60000)) + ":" + str(
         int((track_info['duration_ms'] % 60000) / 1000)).zfill(2)
 
-    song_progress_time_width, _ = draw.textsize(song_progress_time, font=details_font)
-    song_length_width, _ = draw.textsize(song_length, font=details_font)
+    song_progress_time_width, _ = draw.textsize(song_progress_time, font=fifteen_font)
+    song_length_width, _ = draw.textsize(song_length, font=fifteen_font)
 
     # Progress bar and song time
     progress_percentage = track_info['progress_ms'] / track_info['duration_ms']
     buffer_space = 0  # you can adjust this to increase/decrease the gap
     #max_progress_bar_width = epd.width - song_progress_time_width - song_length_width - buffer_space
     max_progress_bar_width = epd.width - 10
-    print("================DEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUGDEBUG")
-    print("max_progress_bar_width: " + str(max_progress_bar_width))
-    print("song_progress_time_width: " + str(song_progress_time_width))
-    print("song_length_width: " + str(song_length_width))
-    print("epd.width: " + str(epd.width))
     progress_filled = int(max_progress_bar_width * progress_percentage)
 
     y_progress_bar = 40
@@ -77,8 +73,8 @@ def display_on_epaper(track_info):
     x_start_time = x_progress_start
     x_end_time = x_progress_start + max_progress_bar_width + song_progress_time_width
 
-    draw.text((x_start_time - 5, y_time), song_progress_time, font=details_font, fill=255)
-    draw.text((x_end_time + 5, y_time), song_length, font=details_font, fill=255)
+    draw.text((x_start_time - 5, y_time), song_progress_time, font=fifteen_font, fill=255)
+    draw.text((x_end_time + 5, y_time), song_length, font=fifteen_font, fill=255)
 
     # Draw the progress bar
     draw.rectangle([(x_start_time + song_progress_time_width, y_progress_bar),
@@ -88,37 +84,40 @@ def display_on_epaper(track_info):
 
     # Artist name below the progress bar
     artist_text = "by " + track_info['artist']
-    artist_text_width, artist_text_height = draw.textsize(artist_text, font=details_font)
+    artist_text_width, artist_text_height = draw.textsize(artist_text, font=eighteen_font)
     x_artist = epd.width - artist_text_width // 2
     y_artist = y_progress_bar + 15
-    draw.text((x_artist, y_artist), artist_text, font=details_font, fill=255)
+    draw.text((x_artist, y_artist), artist_text, font=eighteen_font, fill=255)
 
     # Album name below the artist name
     album_text = "in " + track_info['album']
-    album_text_width, album_text_height = draw.textsize(album_text, font=details_font)
+    album_text_width, album_text_height = draw.textsize(album_text, font=eighteen_font)
     x_album = epd.width - album_text_width // 2
     y_album = y_artist + artist_text_height
-    draw.text((x_album, y_album), album_text, font=details_font, fill=255)
+    draw.text((x_album, y_album), album_text, font=eighteen_font, fill=255)
 
     # Icons at the bottom
     icon_spacing = 40
     icons_x_position = 10
     if track_info['liked']:
-        liked_icon = Image.open('liked.bmp')
-        image.paste(liked_icon, (icons_x_position, epd.height - icon_size[1] - 10))
+        print("this icon was attempted to load")
+        liked_icon = prepare_icon_for_epaper("liked.png", (32, 32))
+        image.paste(liked_icon, (icons_x_position, epd.height // 2), liked_icon)
         icons_x_position += icon_spacing
+        epd.display(epd.getbuffer(image))
 
-    if track_info['shuffle_state']:
-        random_icon = Image.open('shuffle.bmp')
-        image.paste(random_icon, (icons_x_position, epd.height - icon_size[1] - 10))
-        icons_x_position += icon_spacing
+    #if track_info['shuffle_state']:
+    #    random_icon = Image.open('shuffle.bmp')
+    #    image.paste(random_icon, (icons_x_position, epd.height - icon_size[1] - 10))
+    #    icons_x_position += icon_spacing
 
-    if track_info['repeat_state']:
-        repeat_icon = Image.open('repeat.bmp')
-        image.paste(repeat_icon, (icons_x_position, epd.height - icon_size[1] - 10))
+    #if track_info['repeat_state']:
+    #    repeat_icon = Image.open('repeat.bmp')
+    #    image.paste(repeat_icon, (icons_x_position, epd.height - icon_size[1] - 10))
 
     # Display the image on e-paper
-    epd.display(epd.getbuffer(image))
+    #epd.display(epd.getbuffer(image))
+
     time.sleep(300)
     epd.Clear(0xFF)
     epd.sleep()
@@ -144,6 +143,40 @@ def get_spotify_track_info():
     except Exception as e:
         print(f"Error fetching track info: {e}")
         return None
+
+
+def prepare_icon_for_epaper(image_path, icon_size=(128, 128)):
+    """
+    Prepares an image to be loaded onto a monochrome ePaper display as an icon.
+
+    Args:
+        image_path (str): Path to the input image.
+        icon_size (tuple): Desired size for the icon as (width, height).
+
+    Returns:
+        Image: Processed image ready to be displayed on an ePaper.
+    """
+
+    # 1. Open the image
+    image = Image.open(image_path)
+
+    # 2. Resize the image while maintaining its aspect ratio
+    image.thumbnail(icon_size, Image.ANTIALIAS)
+
+    # 3 & 4. Convert to grayscale and then to binary
+    grayscale_image = image.convert('L')
+    threshold = 127
+    binary_image = grayscale_image.point(lambda p: 255 if p > threshold else 0, mode='1')
+
+    # 5. Handle transparency (if the image has an alpha channel)
+    if image.mode == 'RGBA':
+        background_color = (255, 255, 255)  # White background
+        blended_image = Image.new('RGB', image.size, background_color)
+        blended_image.paste(binary_image, (0, 0), binary_image)
+        binary_image = blended_image.convert('1')  # Convert blended RGB to binary
+
+    # 6. Return the processed image
+    return binary_image
 
 
 if __name__ == "__main__":
